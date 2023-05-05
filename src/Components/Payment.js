@@ -1,5 +1,6 @@
 import '../css/payment.css';
 
+//Payment Form Component
 export default function Payment({processPayment}) {
 
     return (

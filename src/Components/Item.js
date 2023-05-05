@@ -1,6 +1,7 @@
 
 import '../css/item.css';
 
+//Inventory Item Component
 export default function Item({item, increment, decrement}) {
 
 

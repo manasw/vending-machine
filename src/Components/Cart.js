@@ -1,14 +1,7 @@
 import '../css/cart.css';
 
-
+//Shopping Cart Component
 export default function Cart({items, total, checkout}) {
-
-    /*function calculateTotal() {
-        var t = 0;
-        items.map((item) => {
-            t = t + (item.incart * item.price)});
-        return (Math.round(t * 100)/100).toFixed(2);
-    }*/
 
     const cartItems = items.map(i =>
         <ul>

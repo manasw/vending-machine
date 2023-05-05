@@ -11,54 +11,55 @@ function App() {
   const [showPayment, setShowPayment] = useState(false);
   const [total, setTotal] = useState(0);
 
+  //Retreive Inventory using the backend api
   useEffect (() => {
     fetch('http://localhost:8080/inventory')
       .then((response) => response.json())
       .then((data) =>{  
-        //console.log(data.items);
-        const newItems = data.items.map((item, i) => {
+        //Add the items returned to the state of the app along with the 'incart' quantity initialized to 0
+        const newItems = data.map((item, i) => {
           item.incart = 0;
           return item;
         });
         setItems(newItems);
-        //console.log(newItems);
       })
       .catch((err) => {
         console.log(err.message);
       })
   }, []);
 
-  const addSale = async () => {
+  //Function to Post the sale transaction to the backend
+  const addSale = async (saleItems) => {
     await fetch('http://localhost:8080/transactions', {
-    method: 'POST',
-    body: JSON.stringify({
-       soda: 1,
-       candy: 1,
-       chips: 1,
-       amount: total
-    }),
-    headers: {
-       'Content-type': 'application/json; charset=UTF-8',
-       'Access-Control-Allow-Methods': ["POST","GET","OPTIONS","DELETE","PUT",],
-       'Origin': '*',
-        'Access-Control-Allow-Headers': '*',
-        'Access-Control-Allow-Origin': '*',
-    },
+      method: 'POST',
+      body: JSON.stringify({
+        items: saleItems,
+        amount: total
+      }),
+      headers: {
+       'Content-type': 'application/json;',
+      },
     })
     .then((response) => response.json())
     .then((data) => {
+      //Empty the cart on successful response
+      const newItems = items.map((item, i) => {
+        item.incart = 0;
+        return item;
+      });
+      setItems(newItems);
+      setTotal(0);
     })
     .catch((err) => {
        console.log(err.message);
     });
-    };
+  };
     
-
+  //Handler when the user clicks on the Add to Cart button of any of the items
   function handleAddToCart(itemtype) {
     const newItems = items.map((item, i) => {
       if (item.name === itemtype) {
-        console.log(item.quantity);
-        // Increment the item quantity
+        // Increment the incart  value and decrement quantity
         if(item.quantity > 0) {
           item.quantity-- ;
           item.incart++;
@@ -73,11 +74,12 @@ function App() {
     calculateTotal();
   };
 
+  //Handler when the user clicks on the Remove from Cart button of any of the items
   function handleRemoveFromCart(itemtype) {
     const newItems = items.map((item, i) => {
       if (item.name === itemtype) {
         console.log(item.incart);
-        // Decrement the item quantity
+        // Decrement the incart value and increment quantity
         if(item.incart > 0) {
           item.quantity++;
           item.incart--;
@@ -92,6 +94,7 @@ function App() {
     calculateTotal();
   };
 
+  //Calculate the total price of the items in the cart
   function calculateTotal() {
     var t = 0;
     items.map((item) => {
@@ -99,21 +102,21 @@ function App() {
     setTotal((Math.round(t * 100)/100).toFixed(2));
   }
 
-
+  //Show the Payment component on clicking Checkout
   function handleCheckout() {
     if(total > 0) {
       setShowPayment(!showPayment);
     }
   }
 
+  //Handler when the user clicks Complete Purchase in the Payment component
   function handlePayment() {
     setShowPayment(!showPayment);
-    const newItems = items.map((item, i) => {
-      item.incart = 0;
-      return item;
+    const saleItems = items.map((item, i) => {
+      const s = {"name": item.name, "quantity": item.incart, "price": item.price}
+      return s;
     });
-    setItems(newItems);
-    addSale();
+    addSale(saleItems);
   }
 
   const menuItems = items.map(i =>
