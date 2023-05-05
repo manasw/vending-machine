@@ -2,22 +2,57 @@ import './App.css';
 import Item from './Components/Item';
 import Cart from './Components/Cart';
 import Payment from './Components/Payment';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 
 function App() {
 
-  let initialItems = [
-      {name: "Soda", quantity: 25, incart: 0, price: 0.90},
-      {name: "Candy Bar", quantity: 25, incart: 0, price: 0.60},
-      {name: "Chips", quantity: 25, incart: 0, price:0.99},
-  ];
-
-  const [items, setItems] = useState(
-    initialItems
-  );
-
+  const [items, setItems] = useState([]);
   const [showPayment, setShowPayment] = useState(false);
+  const [total, setTotal] = useState(0);
+
+  useEffect (() => {
+    fetch('http://localhost:8080/inventory')
+      .then((response) => response.json())
+      .then((data) =>{  
+        //console.log(data.items);
+        const newItems = data.items.map((item, i) => {
+          item.incart = 0;
+          return item;
+        });
+        setItems(newItems);
+        //console.log(newItems);
+      })
+      .catch((err) => {
+        console.log(err.message);
+      })
+  }, []);
+
+  const addSale = async () => {
+    await fetch('http://localhost:8080/transactions', {
+    method: 'POST',
+    body: JSON.stringify({
+       soda: 1,
+       candy: 1,
+       chips: 1,
+       amount: total
+    }),
+    headers: {
+       'Content-type': 'application/json; charset=UTF-8',
+       'Access-Control-Allow-Methods': ["POST","GET","OPTIONS","DELETE","PUT",],
+       'Origin': '*',
+        'Access-Control-Allow-Headers': '*',
+        'Access-Control-Allow-Origin': '*',
+    },
+    })
+    .then((response) => response.json())
+    .then((data) => {
+    })
+    .catch((err) => {
+       console.log(err.message);
+    });
+    };
+    
 
   function handleAddToCart(itemtype) {
     const newItems = items.map((item, i) => {
@@ -35,6 +70,7 @@ function App() {
       }
     });
     setItems(newItems);
+    calculateTotal();
   };
 
   function handleRemoveFromCart(itemtype) {
@@ -53,11 +89,21 @@ function App() {
       }
     });
     setItems(newItems);
+    calculateTotal();
   };
 
+  function calculateTotal() {
+    var t = 0;
+    items.map((item) => {
+        t = t + (item.incart * item.price)});
+    setTotal((Math.round(t * 100)/100).toFixed(2));
+  }
+
+
   function handleCheckout() {
-    console.log(showPayment)
-    setShowPayment(!showPayment);
+    if(total > 0) {
+      setShowPayment(!showPayment);
+    }
   }
 
   function handlePayment() {
@@ -67,7 +113,7 @@ function App() {
       return item;
     });
     setItems(newItems);
-
+    addSale();
   }
 
   const menuItems = items.map(i =>
@@ -81,7 +127,7 @@ function App() {
         {menuItems}
         </div> 
         <div className ='cart'>
-        <Cart items={items} checkout={handleCheckout}></Cart>
+        <Cart items={items} total={total} checkout={handleCheckout}></Cart>
         </div>
         {showPayment ?   
           <div className ='payment'>
