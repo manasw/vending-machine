@@ -1,0 +1,10 @@
+.payment {
+    min-width: 450px;
+    max-width: 600px;
+    margin: 10px 10px 10px 10px;
+    font-family: 'Montserrat', sans-serif;
+    text-align: center;}
+
+.input{
+    width: 150px;
+}
